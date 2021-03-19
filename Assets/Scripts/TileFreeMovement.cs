@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = System.Random;
 
 [ExecuteInEditMode]
 public class TileFreeMovement : MonoBehaviour
@@ -10,21 +11,29 @@ public class TileFreeMovement : MonoBehaviour
     public Text text;
     private float _directionXValue;
     private float _directionYValue;
+
+    private RaycastHit2D _hit;
     private bool _isMoving;
     private Vector2 _oriPos, _tarPos;
     private Touch _touch;
     private Vector2 _touchStartPosition, _touchEndPosition;
 
+
     private void Update()
     {
 #if UNITY_EDITOR
 
-        if (Input.GetMouseButtonDown(0))
+        /*if (Input.GetMouseButtonDown(0))
         {
-            var hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
+            _hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
 
-            if (hit.collider != null) Debug.Log(hit.collider.tag);
-        }
+            if (_hit.collider != null)
+            {
+                Debug.Log(_hit.collider.tag);
+
+                _hit.transform.position = new Vector3(0, 0, 0);
+            }
+        }*/
 
 #endif
 
@@ -45,10 +54,10 @@ public class TileFreeMovement : MonoBehaviour
                 case TouchPhase.Ended:
 
 
-                    var hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(_touchStartPosition), Vector2.zero);
+                    _hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(_touchStartPosition), Vector2.zero);
 
-                    if (hit.collider != null)
-                        if (hit.collider.CompareTag("Number"))
+                    if (_hit.collider != null)
+                        if (_hit.collider.CompareTag("Number"))
                         {
                             _touchEndPosition = _touch.position;
                             var x = _touchEndPosition.x - _touchStartPosition.x;
@@ -97,17 +106,17 @@ public class TileFreeMovement : MonoBehaviour
     {
         _isMoving = true;
         float elapsedTime = 0;
-        _oriPos = transform.position;
+        _oriPos = _hit.transform.position;
         _tarPos = _oriPos + direction;
 
         while (elapsedTime < TimeToMove)
         {
-            transform.position = Vector2.Lerp(_oriPos, _tarPos, elapsedTime / TimeToMove);
+            _hit.transform.position = Vector2.Lerp(_oriPos, _tarPos, elapsedTime / TimeToMove);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
-        transform.position = _tarPos;
+        _hit.transform.position = _tarPos;
         _isMoving = false;
 
         //transform.Translate(direction);
