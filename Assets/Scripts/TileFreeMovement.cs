@@ -17,12 +17,17 @@ public class TileFreeMovement : MonoBehaviour
 
     private void Update()
     {
-        /*
-        if (Input.GetKeyDown(KeyCode.W)) MoveTile(Vector3.up);
-        else if (Input.GetKeyDown(KeyCode.S)) MoveTile(Vector3.down);
-        else if (Input.GetKeyDown(KeyCode.D)) MoveTile(Vector3.right);
-        else if (Input.GetKeyDown(KeyCode.A)) MoveTile(Vector3.left);
-        */
+#if UNITY_EDITOR
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            var hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
+
+            if (hit.collider != null) Debug.Log(hit.collider.tag);
+        }
+
+#endif
+
 
         if (Input.touchCount > 0)
         {
@@ -39,26 +44,34 @@ public class TileFreeMovement : MonoBehaviour
 
                 case TouchPhase.Ended:
 
-                    _touchEndPosition = _touch.position;
-                    var x = _touchEndPosition.x - _touchStartPosition.x;
-                    var y = _touchEndPosition.y - _touchStartPosition.y;
-                    _directionXValue = x;
-                    _directionYValue = y;
 
-                    if (Mathf.Abs(x) > Mathf.Abs(y) && !_isMoving)
-                    {
-                        if (x > 0.0f)
-                            StartCoroutine(MoveTile(Vector2.right));
-                        else if (x < 0.0f)
-                            StartCoroutine(MoveTile(Vector2.left));
-                    }
-                    else if (Mathf.Abs(x) < Mathf.Abs(y) && !_isMoving)
-                    {
-                        if (y > 0.0f)
-                            StartCoroutine(MoveTile(Vector2.up));
-                        else if (y < 0.0f)
-                            StartCoroutine(MoveTile(Vector2.down));
-                    }
+                    var hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(_touchStartPosition), Vector2.zero);
+
+                    if (hit.collider != null)
+                        if (hit.collider.CompareTag("Number"))
+                        {
+                            _touchEndPosition = _touch.position;
+                            var x = _touchEndPosition.x - _touchStartPosition.x;
+                            var y = _touchEndPosition.y - _touchStartPosition.y;
+                            _directionXValue = x;
+                            _directionYValue = y;
+
+                            if (Mathf.Abs(x) > Mathf.Abs(y) && !_isMoving)
+                            {
+                                if (x > 0.0f)
+                                    StartCoroutine(MoveTile(Vector2.right));
+                                else if (x < 0.0f)
+                                    StartCoroutine(MoveTile(Vector2.left));
+                            }
+                            else if (Mathf.Abs(x) < Mathf.Abs(y) && !_isMoving)
+                            {
+                                if (y > 0.0f)
+                                    StartCoroutine(MoveTile(Vector2.up));
+                                else if (y < 0.0f)
+                                    StartCoroutine(MoveTile(Vector2.down));
+                            }
+                        }
+
 
                     break;
 
