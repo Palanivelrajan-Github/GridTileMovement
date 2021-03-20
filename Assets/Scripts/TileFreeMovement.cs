@@ -2,12 +2,10 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using Random = System.Random;
 
-[ExecuteInEditMode]
 public class TileFreeMovement : MonoBehaviour
 {
-    private const float TimeToMove = 0.2f;
+    private const float TimeToMove = 0.15f;
     public Text text;
     private float _directionXValue;
     private float _directionYValue;
@@ -23,22 +21,17 @@ public class TileFreeMovement : MonoBehaviour
     {
 #if UNITY_EDITOR
 
-        /*if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && !_isMoving)
         {
             _hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
 
-            if (_hit.collider != null)
-            {
-                Debug.Log(_hit.collider.tag);
-
-                _hit.transform.position = new Vector3(0, 0, 0);
-            }
-        }*/
+            if (_hit.collider != null) StartCoroutine(MoveTile(Vector2.left));
+        }
 
 #endif
 
 
-        if (Input.touchCount > 0)
+        if (Input.touchCount > 0 && !_isMoving)
         {
             _touch = Input.GetTouch(0);
 
@@ -65,14 +58,14 @@ public class TileFreeMovement : MonoBehaviour
                             _directionXValue = x;
                             _directionYValue = y;
 
-                            if (Mathf.Abs(x) > Mathf.Abs(y) && !_isMoving)
+                            if (Mathf.Abs(x) > Mathf.Abs(y))
                             {
                                 if (x > 0.0f)
                                     StartCoroutine(MoveTile(Vector2.right));
                                 else if (x < 0.0f)
                                     StartCoroutine(MoveTile(Vector2.left));
                             }
-                            else if (Mathf.Abs(x) < Mathf.Abs(y) && !_isMoving)
+                            else if (Mathf.Abs(x) < Mathf.Abs(y))
                             {
                                 if (y > 0.0f)
                                     StartCoroutine(MoveTile(Vector2.up));
@@ -80,7 +73,6 @@ public class TileFreeMovement : MonoBehaviour
                                     StartCoroutine(MoveTile(Vector2.down));
                             }
                         }
-
 
                     break;
 
@@ -97,7 +89,6 @@ public class TileFreeMovement : MonoBehaviour
                     throw new ArgumentOutOfRangeException();
             }
         }
-
 
         text.text = "X:" + _directionXValue + " " + "Y:" + _directionYValue;
     }
@@ -118,7 +109,5 @@ public class TileFreeMovement : MonoBehaviour
 
         _hit.transform.position = _tarPos;
         _isMoving = false;
-
-        //transform.Translate(direction);
     }
 }
