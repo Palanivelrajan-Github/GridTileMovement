@@ -5,8 +5,10 @@ using UnityEngine.UI;
 
 public class TileFreeMovement : MonoBehaviour
 {
-    private const float TimeToMove = 0.15f;
+    private const float TimeToMove = 0.17f;
     public Text text;
+
+    public LayerMask borderLayerMask;
     private float _directionXValue;
     private float _directionYValue;
 
@@ -16,16 +18,16 @@ public class TileFreeMovement : MonoBehaviour
     private Touch _touch;
     private Vector2 _touchStartPosition, _touchEndPosition;
 
-
     private void Update()
     {
 #if UNITY_EDITOR
+
 
         if (Input.GetMouseButtonDown(0) && !_isMoving)
         {
             _hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
 
-            if (_hit.collider != null) StartCoroutine(MoveTile(Vector2.left));
+            if (_hit.collider != null && _hit.collider.CompareTag("Number")) StartCoroutine(MoveTile(Vector2.left));
         }
 
 #endif
@@ -100,14 +102,21 @@ public class TileFreeMovement : MonoBehaviour
         _oriPos = _hit.transform.position;
         _tarPos = _oriPos + direction;
 
-        while (elapsedTime < TimeToMove)
+        if (!Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask))
         {
-            _hit.transform.position = Vector2.Lerp(_oriPos, _tarPos, elapsedTime / TimeToMove);
-            elapsedTime += Time.deltaTime;
-            yield return null;
-        }
+            while (elapsedTime < TimeToMove)
+            {
+                _hit.transform.position = Vector2.Lerp(_oriPos, _tarPos, elapsedTime / TimeToMove);
+                elapsedTime += Time.deltaTime;
+                yield return null;
+            }
 
-        _hit.transform.position = _tarPos;
-        _isMoving = false;
+            _hit.transform.position = _tarPos;
+            _isMoving = false;
+        }
+        else
+        {
+            _isMoving = false;
+        }
     }
 }
