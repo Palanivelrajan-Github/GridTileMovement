@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
+//[ExecuteInEditMode]
 public class TileFreeMovement : MonoBehaviour
 {
     private const float TimeToMove = 0.17f;
@@ -10,15 +11,19 @@ public class TileFreeMovement : MonoBehaviour
 
     public LayerMask borderLayerMask;
 
-    public Sprite[] Sprites;
+    public Sprite[] sprites;
+
+    public Camera mainCamera;
     private float _directionXValue;
     private float _directionYValue;
-
-    private RaycastHit2D _hit;
+    private RaycastHit2D _endHitRaycastHit2D;
     private bool _isMoving;
     private Vector2 _oriPos, _tarPos;
+
+    private RaycastHit2D _startHitRaycastHit2D;
     private Touch _touch;
     private Vector2 _touchStartPosition, _touchEndPosition;
+
 
     private void Update()
     {
@@ -27,9 +32,11 @@ public class TileFreeMovement : MonoBehaviour
 
         if (Input.GetMouseButtonDown(0) && !_isMoving)
         {
-            _hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
+            _startHitRaycastHit2D =
+                Physics2D.Raycast(mainCamera.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
 
-            if (_hit.collider != null && _hit.collider.CompareTag("Number")) StartCoroutine(MoveTile(Vector2.left));
+            if (_startHitRaycastHit2D.collider != null && _startHitRaycastHit2D.collider.CompareTag("Number"))
+                StartCoroutine(MoveTile(Vector2.left));
         }
 
 #endif
@@ -43,6 +50,17 @@ public class TileFreeMovement : MonoBehaviour
             {
                 case TouchPhase.Began:
                     _touchStartPosition = _touch.position;
+
+                    _startHitRaycastHit2D =
+                        Physics2D.Raycast(mainCamera.ScreenToWorldPoint(_touchStartPosition), Vector2.zero);
+
+                    //new
+                    if (_startHitRaycastHit2D.collider != null)
+                        if (_startHitRaycastHit2D.transform.name == "Inventory_Number (1)")
+                            _startHitRaycastHit2D.transform.position = mainCamera.ScreenToWorldPoint(_touch.position);
+                            
+
+                    //mainCamera.ScreenPointToRay()
                     break;
 
                 case TouchPhase.Canceled:
@@ -50,18 +68,20 @@ public class TileFreeMovement : MonoBehaviour
 
                 case TouchPhase.Ended:
 
+                    _touchEndPosition = _touch.position;
+                    var x = _touchEndPosition.x - _touchStartPosition.x;
+                    var y = _touchEndPosition.y - _touchStartPosition.y;
+                    //  _directionXValue = x;
+                    // _directionYValue = y;
 
-                    _hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(_touchStartPosition), Vector2.zero);
 
-                    if (_hit.collider != null)
-                        if (_hit.collider.CompareTag("Number"))
+                    _endHitRaycastHit2D =
+                        Physics2D.Raycast(mainCamera.ScreenToWorldPoint(_touchEndPosition), Vector2.zero);
+
+                    if (_startHitRaycastHit2D.collider != null &&
+                        _startHitRaycastHit2D.collider != _endHitRaycastHit2D.collider)
+                        if (_startHitRaycastHit2D.collider.CompareTag("Number"))
                         {
-                            _touchEndPosition = _touch.position;
-                            var x = _touchEndPosition.x - _touchStartPosition.x;
-                            var y = _touchEndPosition.y - _touchStartPosition.y;
-                            _directionXValue = x;
-                            _directionYValue = y;
-
                             if (Mathf.Abs(x) > Mathf.Abs(y))
                             {
                                 if (x > 0.0f)
@@ -77,12 +97,29 @@ public class TileFreeMovement : MonoBehaviour
                                     StartCoroutine(MoveTile(Vector2.down));
                             }
                         }
+                    /*if (_starthitRaycastHit2D.collider.transform.Find("Inventory_Number (1)"))
+                        {
+                            _touchEndPosition = _touch.position;
+                            var x = _touchEndPosition.x;
+                            var y = _touchEndPosition.y;
+
+                            if (Mathf.CeilToInt(x) > Mathf.CeilToInt(y))
+                                _starthitRaycastHit2D.collider.transform.position = MainCamera.ScreenToWorldPoint(
+                                    new Vector3(Mathf.CeilToInt(x),
+                                        Mathf.CeilToInt(_starthitRaycastHit2D.collider.transform.position.y)));
+
+                            else if (Mathf.CeilToInt(x) < Mathf.CeilToInt(y))
+                                _starthitRaycastHit2D.collider.transform.position = MainCamera.ScreenToWorldPoint(
+                                    new Vector3(Mathf.CeilToInt(_starthitRaycastHit2D.collider.transform.position.x),
+                                        Mathf.CeilToInt(y)));
+                        }*/
 
                     break;
 
 
                 case TouchPhase.Moved:
                     _touchEndPosition = _touch.position;
+
                     break;
 
                 case TouchPhase.Stationary:
@@ -94,14 +131,22 @@ public class TileFreeMovement : MonoBehaviour
             }
         }
 
-        text.text = "X:" + _directionXValue + " " + "Y:" + _directionYValue;
+        //text.text = "X:" + _directionXValue + " " + "Y:" + _directionYValue;
+        text.text = "X:" + mainCamera.ScreenToWorldPoint(Vector3.zero).x + "" + "Y:" +
+                    mainCamera.ScreenToWorldPoint(Vector3.zero).y;
     }
 
+
+    /*private void OnEnable()
+    {
+        Debug.Log(Mathf.CeilToInt(-223.05f));
+    }*/
+    // ReSharper disable Unity.PerformanceAnalysis
     private IEnumerator MoveTile(Vector2 direction)
     {
         _isMoving = true;
         float elapsedTime = 0;
-        _oriPos = _hit.transform.position;
+        _oriPos = _startHitRaycastHit2D.transform.position;
         _tarPos = _oriPos + direction;
 
 
@@ -109,33 +154,33 @@ public class TileFreeMovement : MonoBehaviour
         {
             while (elapsedTime < TimeToMove)
             {
-                _hit.transform.position = Vector2.Lerp(_oriPos, _tarPos, elapsedTime / TimeToMove);
+                _startHitRaycastHit2D.transform.position = Vector2.Lerp(_oriPos, _tarPos, elapsedTime / TimeToMove);
                 elapsedTime += Time.deltaTime;
                 yield return null;
             }
 
-            _hit.transform.position = _tarPos;
+            _startHitRaycastHit2D.transform.position = _tarPos;
             _isMoving = false;
         }
         else
         {
-            Debug.Log(_hit.transform.name);
+            //   Debug.Log(_starthitRaycastHit2D.transform.name);
 
-            Debug.Log(Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name);
+            //  Debug.Log(Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name);
 
 
-            if (_hit.transform.name ==
+            if (_startHitRaycastHit2D.transform.name ==
                 Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name)
             {
                 while (elapsedTime < TimeToMove)
                 {
-                    _hit.transform.position = Vector2.Lerp(_oriPos, _tarPos, elapsedTime / TimeToMove);
+                    _startHitRaycastHit2D.transform.position = Vector2.Lerp(_oriPos, _tarPos, elapsedTime / TimeToMove);
                     elapsedTime += Time.deltaTime;
                     yield return null;
                 }
 
-                _hit.transform.position = _tarPos;
-                _hit.transform.gameObject.SetActive(false);
+                _startHitRaycastHit2D.transform.position = _tarPos;
+                _startHitRaycastHit2D.transform.gameObject.SetActive(false);
 
                 if (Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name ==
                     "Number (1)")
@@ -143,7 +188,7 @@ public class TileFreeMovement : MonoBehaviour
                     Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name =
                         "Number (2)";
                     Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.gameObject
-                        .GetComponent<SpriteRenderer>().sprite = Sprites[2];
+                        .GetComponent<SpriteRenderer>().sprite = sprites[2];
                 }
                 else if (Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name ==
                          "Number (2)")
@@ -151,7 +196,7 @@ public class TileFreeMovement : MonoBehaviour
                     Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name =
                         "Number (4)";
                     Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.gameObject
-                        .GetComponent<SpriteRenderer>().sprite = Sprites[3];
+                        .GetComponent<SpriteRenderer>().sprite = sprites[3];
                 }
                 else if (Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name ==
                          "Number (4)")
@@ -159,7 +204,7 @@ public class TileFreeMovement : MonoBehaviour
                     Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name =
                         "Number (8)";
                     Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.gameObject
-                        .GetComponent<SpriteRenderer>().sprite = Sprites[4];
+                        .GetComponent<SpriteRenderer>().sprite = sprites[4];
                 }
                 else if (Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name ==
                          "Number (8)")
@@ -167,10 +212,9 @@ public class TileFreeMovement : MonoBehaviour
                     Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name =
                         "Number (16)";
                     Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.gameObject
-                        .GetComponent<SpriteRenderer>().sprite = Sprites[5];
+                        .GetComponent<SpriteRenderer>().sprite = sprites[5];
                 }
             }
-
 
             _isMoving = false;
         }
