@@ -9,6 +9,8 @@ public class TileFreeMovement : MonoBehaviour
     public Text text;
 
     public LayerMask borderLayerMask;
+
+    public Sprite[] Sprites;
     private float _directionXValue;
     private float _directionYValue;
 
@@ -102,6 +104,7 @@ public class TileFreeMovement : MonoBehaviour
         _oriPos = _hit.transform.position;
         _tarPos = _oriPos + direction;
 
+
         if (!Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask))
         {
             while (elapsedTime < TimeToMove)
@@ -116,6 +119,59 @@ public class TileFreeMovement : MonoBehaviour
         }
         else
         {
+            Debug.Log(_hit.transform.name);
+
+            Debug.Log(Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name);
+
+
+            if (_hit.transform.name ==
+                Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name)
+            {
+                while (elapsedTime < TimeToMove)
+                {
+                    _hit.transform.position = Vector2.Lerp(_oriPos, _tarPos, elapsedTime / TimeToMove);
+                    elapsedTime += Time.deltaTime;
+                    yield return null;
+                }
+
+                _hit.transform.position = _tarPos;
+                _hit.transform.gameObject.SetActive(false);
+
+                if (Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name ==
+                    "Number (1)")
+                {
+                    Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name =
+                        "Number (2)";
+                    Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.gameObject
+                        .GetComponent<SpriteRenderer>().sprite = Sprites[2];
+                }
+                else if (Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name ==
+                         "Number (2)")
+                {
+                    Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name =
+                        "Number (4)";
+                    Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.gameObject
+                        .GetComponent<SpriteRenderer>().sprite = Sprites[3];
+                }
+                else if (Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name ==
+                         "Number (4)")
+                {
+                    Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name =
+                        "Number (8)";
+                    Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.gameObject
+                        .GetComponent<SpriteRenderer>().sprite = Sprites[4];
+                }
+                else if (Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name ==
+                         "Number (8)")
+                {
+                    Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name =
+                        "Number (16)";
+                    Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.gameObject
+                        .GetComponent<SpriteRenderer>().sprite = Sprites[5];
+                }
+            }
+
+
             _isMoving = false;
         }
     }
