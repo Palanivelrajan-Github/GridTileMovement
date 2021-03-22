@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -25,59 +24,68 @@ public class TileFreeMovement : MonoBehaviour
     private Vector2 _touchStartPosition, _touchEndPosition;
 
 
+    
+    
     private void Update()
     {
 #if UNITY_EDITOR
 
 
-        if (Input.GetMouseButtonDown(0) && !_isMoving)
+        /*if (Input.GetMouseButtonDown(0) && !_isMoving)
         {
             _startHitRaycastHit2D =
                 Physics2D.Raycast(mainCamera.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
 
-            if (_startHitRaycastHit2D.collider != null && _startHitRaycastHit2D.collider.CompareTag("Number"))
-                StartCoroutine(MoveTile(Vector2.left));
-        }
+            
+            /*if (_startHitRaycastHit2D.collider != null && _startHitRaycastHit2D.collider.CompareTag("Number"))
+                StartCoroutine(MoveTile(Vector2.left));#1#
+
+            /*if (_startHitRaycastHit2D.collider != null&&_startHitRaycastHit2D.transform.name == "Inventory_Number (1)")
+            {
+                _startHitRaycastHit2D.transform.position = mainCamera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x,Input.mousePosition.y,0.0f));
+            }#1#
+        }*/
 
 #endif
 
+        
 
         if (Input.touchCount > 0 && !_isMoving)
         {
             _touch = Input.GetTouch(0);
 
-            switch (_touch.phase)
+            if (_touch.phase == TouchPhase.Began || _touch.phase == TouchPhase.Moved)
+            {
+                text.text = "object dragging";
+                var ray = Camera.main.ScreenPointToRay(_touch.position);
+                transform.position = new Vector3(ray.origin.x, ray.origin.y, 0);
+               
+            }
+            
+
+            /*switch (_touch.phase)
             {
                 case TouchPhase.Began:
                     _touchStartPosition = _touch.position;
-
-                    _startHitRaycastHit2D =
-                        Physics2D.Raycast(mainCamera.ScreenToWorldPoint(_touchStartPosition), Vector2.zero);
-
-                    //new
-                    if (_startHitRaycastHit2D.collider != null)
-                        if (_startHitRaycastHit2D.transform.name == "Inventory_Number (1)")
-                            _startHitRaycastHit2D.transform.position = mainCamera.ScreenToWorldPoint(_touch.position);
-                            
-
-                    //mainCamera.ScreenPointToRay()
                     break;
-
+    
                 case TouchPhase.Canceled:
                     break;
-
+    
                 case TouchPhase.Ended:
-
+    
                     _touchEndPosition = _touch.position;
                     var x = _touchEndPosition.x - _touchStartPosition.x;
                     var y = _touchEndPosition.y - _touchStartPosition.y;
                     //  _directionXValue = x;
                     // _directionYValue = y;
-
-
+    
+                    _startHitRaycastHit2D =
+                        Physics2D.Raycast(mainCamera.ScreenToWorldPoint(_touchStartPosition), Vector2.zero);
+    
                     _endHitRaycastHit2D =
                         Physics2D.Raycast(mainCamera.ScreenToWorldPoint(_touchEndPosition), Vector2.zero);
-
+    
                     if (_startHitRaycastHit2D.collider != null &&
                         _startHitRaycastHit2D.collider != _endHitRaycastHit2D.collider)
                         if (_startHitRaycastHit2D.collider.CompareTag("Number"))
@@ -102,39 +110,55 @@ public class TileFreeMovement : MonoBehaviour
                             _touchEndPosition = _touch.position;
                             var x = _touchEndPosition.x;
                             var y = _touchEndPosition.y;
-
+    
                             if (Mathf.CeilToInt(x) > Mathf.CeilToInt(y))
                                 _starthitRaycastHit2D.collider.transform.position = MainCamera.ScreenToWorldPoint(
                                     new Vector3(Mathf.CeilToInt(x),
                                         Mathf.CeilToInt(_starthitRaycastHit2D.collider.transform.position.y)));
-
+    
                             else if (Mathf.CeilToInt(x) < Mathf.CeilToInt(y))
                                 _starthitRaycastHit2D.collider.transform.position = MainCamera.ScreenToWorldPoint(
                                     new Vector3(Mathf.CeilToInt(_starthitRaycastHit2D.collider.transform.position.x),
                                         Mathf.CeilToInt(y)));
-                        }*/
-
+                        }#1#
+    
                     break;
-
-
+    
+    
                 case TouchPhase.Moved:
                     _touchEndPosition = _touch.position;
-
+    
                     break;
-
+    
                 case TouchPhase.Stationary:
+                    //new
+                    if (_startHitRaycastHit2D.collider != null)
+                        if (_startHitRaycastHit2D.transform.name == "Inventory_Number (1)")
+                            _startHitRaycastHit2D.transform.position = mainCamera.ScreenToWorldPoint(_touch.position);
+    
+                    //mainCamera.ScreenPointToRay()
                     break;
-
-
+    
+    
                 default:
                     throw new ArgumentOutOfRangeException();
-            }
+            }*/
         }
 
         //text.text = "X:" + _directionXValue + " " + "Y:" + _directionYValue;
-        text.text = "X:" + mainCamera.ScreenToWorldPoint(Vector3.zero).x + "" + "Y:" +
-                    mainCamera.ScreenToWorldPoint(Vector3.zero).y;
+        //  text.text = "X:" + mainCamera.ScreenToWorldPoint(Vector3.zero).x + "" + "Y:" +
+        //            mainCamera.ScreenToWorldPoint(Vector3.zero).y;
+        
+        
     }
+
+    /*private void OnMouseDrag()
+    {
+        Vector3 mousePosition = new Vector3(Input.mousePosition.x, Input.mousePosition.y, 20);
+        Vector3 objPosition = mainCamera.ScreenToWorldPoint(mousePosition);
+ 
+        transform.Find("Inventory_Number (1)").transform.position = objPosition;
+    }*/
 
 
     /*private void OnEnable()
@@ -142,6 +166,8 @@ public class TileFreeMovement : MonoBehaviour
         Debug.Log(Mathf.CeilToInt(-223.05f));
     }*/
     // ReSharper disable Unity.PerformanceAnalysis
+    
+    
     private IEnumerator MoveTile(Vector2 direction)
     {
         _isMoving = true;
@@ -219,4 +245,15 @@ public class TileFreeMovement : MonoBehaviour
             _isMoving = false;
         }
     }
+
+
+    // have to attache individual sprites or game objects
+    /*private void OnMouseDrag()
+    {
+        Debug.Log("On Mouse Drag");
+        var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        //transform.position = new Vector3(ray.origin.x, ray.origin.y, 0);
+        transform.Find("Inventory_Number (1)").position= new Vector3(ray.origin.x, ray.origin.y, 0);
+        
+    }*/
 }
