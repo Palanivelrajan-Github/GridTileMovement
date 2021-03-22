@@ -1,8 +1,8 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-//[ExecuteInEditMode]
 public class TileFreeMovement : MonoBehaviour
 {
     private const float TimeToMove = 0.17f;
@@ -13,161 +13,93 @@ public class TileFreeMovement : MonoBehaviour
     public Sprite[] sprites;
 
     public Camera mainCamera;
-    private float _directionXValue;
-    private float _directionYValue;
     private RaycastHit2D _endHitRaycastHit2D;
     private bool _isMoving;
     private Vector2 _oriPos, _tarPos;
-
     private RaycastHit2D _startHitRaycastHit2D;
+
     private Touch _touch;
     private Vector2 _touchStartPosition, _touchEndPosition;
 
 
-    
-    
     private void Update()
     {
 #if UNITY_EDITOR
 
 
-        /*if (Input.GetMouseButtonDown(0) && !_isMoving)
+        if (Input.GetMouseButtonDown(0) && !_isMoving)
         {
             _startHitRaycastHit2D =
                 Physics2D.Raycast(mainCamera.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
 
-            
-            /*if (_startHitRaycastHit2D.collider != null && _startHitRaycastHit2D.collider.CompareTag("Number"))
-                StartCoroutine(MoveTile(Vector2.left));#1#
 
-            /*if (_startHitRaycastHit2D.collider != null&&_startHitRaycastHit2D.transform.name == "Inventory_Number (1)")
-            {
-                _startHitRaycastHit2D.transform.position = mainCamera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x,Input.mousePosition.y,0.0f));
-            }#1#
-        }*/
+            if (_startHitRaycastHit2D.collider != null && _startHitRaycastHit2D.collider.CompareTag("Number"))
+                StartCoroutine(MoveTile(Vector2.left));
+        }
 
 #endif
 
-        
 
-        if (Input.touchCount > 0 && !_isMoving)
+        if (Input.touchCount <= 0 || _isMoving) return;
+        _touch = Input.GetTouch(0);
+
+        switch (_touch.phase)
         {
-            _touch = Input.GetTouch(0);
+            case TouchPhase.Began:
+                _touchStartPosition = _touch.position;
+                break;
 
-            if (_touch.phase == TouchPhase.Began || _touch.phase == TouchPhase.Moved)
-            {
-                text.text = "object dragging";
-                var ray = Camera.main.ScreenPointToRay(_touch.position);
-                transform.position = new Vector3(ray.origin.x, ray.origin.y, 0);
-               
-            }
-            
+            case TouchPhase.Canceled:
+                break;
 
-            /*switch (_touch.phase)
-            {
-                case TouchPhase.Began:
-                    _touchStartPosition = _touch.position;
-                    break;
-    
-                case TouchPhase.Canceled:
-                    break;
-    
-                case TouchPhase.Ended:
-    
-                    _touchEndPosition = _touch.position;
-                    var x = _touchEndPosition.x - _touchStartPosition.x;
-                    var y = _touchEndPosition.y - _touchStartPosition.y;
-                    //  _directionXValue = x;
-                    // _directionYValue = y;
-    
-                    _startHitRaycastHit2D =
-                        Physics2D.Raycast(mainCamera.ScreenToWorldPoint(_touchStartPosition), Vector2.zero);
-    
-                    _endHitRaycastHit2D =
-                        Physics2D.Raycast(mainCamera.ScreenToWorldPoint(_touchEndPosition), Vector2.zero);
-    
-                    if (_startHitRaycastHit2D.collider != null &&
-                        _startHitRaycastHit2D.collider != _endHitRaycastHit2D.collider)
-                        if (_startHitRaycastHit2D.collider.CompareTag("Number"))
+            case TouchPhase.Ended:
+
+                _touchEndPosition = _touch.position;
+                var x = _touchEndPosition.x - _touchStartPosition.x;
+                var y = _touchEndPosition.y - _touchStartPosition.y;
+
+                _startHitRaycastHit2D =
+                    Physics2D.Raycast(mainCamera.ScreenToWorldPoint(_touchStartPosition), Vector2.zero);
+
+                _endHitRaycastHit2D =
+                    Physics2D.Raycast(mainCamera.ScreenToWorldPoint(_touchEndPosition), Vector2.zero);
+
+                if (_startHitRaycastHit2D.collider != null &&
+                    _startHitRaycastHit2D.collider != _endHitRaycastHit2D.collider)
+                    if (_startHitRaycastHit2D.collider.CompareTag("Number"))
+                    {
+                        if (Mathf.Abs(x) > Mathf.Abs(y))
                         {
-                            if (Mathf.Abs(x) > Mathf.Abs(y))
-                            {
-                                if (x > 0.0f)
-                                    StartCoroutine(MoveTile(Vector2.right));
-                                else if (x < 0.0f)
-                                    StartCoroutine(MoveTile(Vector2.left));
-                            }
-                            else if (Mathf.Abs(x) < Mathf.Abs(y))
-                            {
-                                if (y > 0.0f)
-                                    StartCoroutine(MoveTile(Vector2.up));
-                                else if (y < 0.0f)
-                                    StartCoroutine(MoveTile(Vector2.down));
-                            }
+                            if (x > 0.0f)
+                                StartCoroutine(MoveTile(Vector2.right));
+                            else if (x < 0.0f)
+                                StartCoroutine(MoveTile(Vector2.left));
                         }
-                    /*if (_starthitRaycastHit2D.collider.transform.Find("Inventory_Number (1)"))
+                        else if (Mathf.Abs(x) < Mathf.Abs(y))
                         {
-                            _touchEndPosition = _touch.position;
-                            var x = _touchEndPosition.x;
-                            var y = _touchEndPosition.y;
-    
-                            if (Mathf.CeilToInt(x) > Mathf.CeilToInt(y))
-                                _starthitRaycastHit2D.collider.transform.position = MainCamera.ScreenToWorldPoint(
-                                    new Vector3(Mathf.CeilToInt(x),
-                                        Mathf.CeilToInt(_starthitRaycastHit2D.collider.transform.position.y)));
-    
-                            else if (Mathf.CeilToInt(x) < Mathf.CeilToInt(y))
-                                _starthitRaycastHit2D.collider.transform.position = MainCamera.ScreenToWorldPoint(
-                                    new Vector3(Mathf.CeilToInt(_starthitRaycastHit2D.collider.transform.position.x),
-                                        Mathf.CeilToInt(y)));
-                        }#1#
-    
-                    break;
-    
-    
-                case TouchPhase.Moved:
-                    _touchEndPosition = _touch.position;
-    
-                    break;
-    
-                case TouchPhase.Stationary:
-                    //new
-                    if (_startHitRaycastHit2D.collider != null)
-                        if (_startHitRaycastHit2D.transform.name == "Inventory_Number (1)")
-                            _startHitRaycastHit2D.transform.position = mainCamera.ScreenToWorldPoint(_touch.position);
-    
-                    //mainCamera.ScreenPointToRay()
-                    break;
-    
-    
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }*/
-        }
+                            if (y > 0.0f)
+                                StartCoroutine(MoveTile(Vector2.up));
+                            else if (y < 0.0f)
+                                StartCoroutine(MoveTile(Vector2.down));
+                        }
+                    }
 
-        //text.text = "X:" + _directionXValue + " " + "Y:" + _directionYValue;
-        //  text.text = "X:" + mainCamera.ScreenToWorldPoint(Vector3.zero).x + "" + "Y:" +
-        //            mainCamera.ScreenToWorldPoint(Vector3.zero).y;
-        
-        
+                break;
+
+
+            case TouchPhase.Moved:
+                _touchEndPosition = _touch.position;
+                break;
+
+            case TouchPhase.Stationary:
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
 
-    /*private void OnMouseDrag()
-    {
-        Vector3 mousePosition = new Vector3(Input.mousePosition.x, Input.mousePosition.y, 20);
-        Vector3 objPosition = mainCamera.ScreenToWorldPoint(mousePosition);
- 
-        transform.Find("Inventory_Number (1)").transform.position = objPosition;
-    }*/
 
-
-    /*private void OnEnable()
-    {
-        Debug.Log(Mathf.CeilToInt(-223.05f));
-    }*/
-    // ReSharper disable Unity.PerformanceAnalysis
-    
-    
     private IEnumerator MoveTile(Vector2 direction)
     {
         _isMoving = true;
@@ -190,11 +122,6 @@ public class TileFreeMovement : MonoBehaviour
         }
         else
         {
-            //   Debug.Log(_starthitRaycastHit2D.transform.name);
-
-            //  Debug.Log(Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name);
-
-
             if (_startHitRaycastHit2D.transform.name ==
                 Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name)
             {
@@ -245,15 +172,4 @@ public class TileFreeMovement : MonoBehaviour
             _isMoving = false;
         }
     }
-
-
-    // have to attache individual sprites or game objects
-    /*private void OnMouseDrag()
-    {
-        Debug.Log("On Mouse Drag");
-        var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        //transform.position = new Vector3(ray.origin.x, ray.origin.y, 0);
-        transform.Find("Inventory_Number (1)").position= new Vector3(ray.origin.x, ray.origin.y, 0);
-        
-    }*/
 }
