@@ -679,7 +679,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 743470888}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2, y: 2, z: 0}
+  m_LocalPosition: {x: -1, y: 2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -788,7 +788,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 931190870}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2, y: 2, z: 0}
+  m_LocalPosition: {x: -2, y: 2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -2245,7 +2245,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1103346501}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 4, z: 0}
+  m_LocalPosition: {x: -2, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -2462,7 +2462,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1454693971}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1, y: 2, z: 0}
+  m_LocalPosition: {x: 0, y: 2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -2571,7 +2571,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1608737488}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -2, z: 0}
+  m_LocalPosition: {x: -2, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -2612,11 +2612,16 @@ MonoBehaviour:
     m_Bits: 64
   sprites:
   - {fileID: 8492618077510456335, guid: 7fd50f2c4dc8aef4ea1c6911b8bd058a, type: 3}
-  - {fileID: 6953010104906253319, guid: 7fd50f2c4dc8aef4ea1c6911b8bd058a, type: 3}
-  - {fileID: -8739543633225295757, guid: 7fd50f2c4dc8aef4ea1c6911b8bd058a, type: 3}
-  - {fileID: 6166877064056478928, guid: 7fd50f2c4dc8aef4ea1c6911b8bd058a, type: 3}
-  - {fileID: 916748320598506516, guid: 7fd50f2c4dc8aef4ea1c6911b8bd058a, type: 3}
-  - {fileID: -877637759411651707, guid: 7fd50f2c4dc8aef4ea1c6911b8bd058a, type: 3}
+  - {fileID: 8567850128574469835, guid: 7fd50f2c4dc8aef4ea1c6911b8bd058a, type: 3}
+  - {fileID: -57376642598376423, guid: 7fd50f2c4dc8aef4ea1c6911b8bd058a, type: 3}
+  - {fileID: 169839005730321864, guid: 7fd50f2c4dc8aef4ea1c6911b8bd058a, type: 3}
+  - {fileID: -2571116470875710170, guid: 7fd50f2c4dc8aef4ea1c6911b8bd058a, type: 3}
+  - {fileID: -7976671620588831318, guid: 7fd50f2c4dc8aef4ea1c6911b8bd058a, type: 3}
+  - {fileID: 6018486914430669231, guid: 7fd50f2c4dc8aef4ea1c6911b8bd058a, type: 3}
+  - {fileID: 7597035330068346062, guid: 7fd50f2c4dc8aef4ea1c6911b8bd058a, type: 3}
+  - {fileID: 4748128383596464190, guid: 7fd50f2c4dc8aef4ea1c6911b8bd058a, type: 3}
+  - {fileID: 6511557152614057388, guid: 7fd50f2c4dc8aef4ea1c6911b8bd058a, type: 3}
+  - {fileID: 6588005654893857085, guid: 7fd50f2c4dc8aef4ea1c6911b8bd058a, type: 3}
   mainCamera: {fileID: 519420031}
 --- !u!4 &1777627700
 Transform:

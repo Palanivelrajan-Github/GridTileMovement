@@ -3,9 +3,10 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
+[ExecuteInEditMode]
 public class TileFreeMovement : MonoBehaviour
 {
-    private const float TimeToMove = 0.17f;
+    private const float TimeToMove = 5.17f;
     public Text text;
 
     public LayerMask borderLayerMask;
@@ -20,7 +21,6 @@ public class TileFreeMovement : MonoBehaviour
 
     private Touch _touch;
     private Vector2 _touchStartPosition, _touchEndPosition;
-
 
     private void Update()
     {
@@ -100,6 +100,23 @@ public class TileFreeMovement : MonoBehaviour
     }
 
 
+    private void OnEnable()
+    {
+        /*var str1 = "Number (011)";
+        var str2 = "Number (10)";
+        int final1;
+
+        var Num1 = str1.Split("("[0]);
+        var Num2 = str2.Split("("[0]);
+
+        final1 = Convert.ToInt32(Num1[1].Substring(0, Num1[1].Length - 1)) +
+                 Convert.ToInt32(Num2[1].Substring(0, Num2[1].Length - 1));
+        // Debug.Log(final1);
+
+        Debug.Log($"Number ({final1})");*/
+    }
+
+
     private IEnumerator MoveTile(Vector2 direction)
     {
         _isMoving = true;
@@ -107,12 +124,11 @@ public class TileFreeMovement : MonoBehaviour
         _oriPos = _startHitRaycastHit2D.transform.position;
         _tarPos = _oriPos + direction;
 
-
         if (!Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask))
         {
             yield return null;
             _isMoving = false;
-            
+
             /*while (elapsedTime < TimeToMove)
             {
                 _startHitRaycastHit2D.transform.position = Vector2.Lerp(_oriPos, _tarPos, elapsedTime / TimeToMove);
@@ -125,9 +141,32 @@ public class TileFreeMovement : MonoBehaviour
         }
         else
         {
-            if (_startHitRaycastHit2D.transform.name ==
-                Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name)
+            var transformGameObjectName = _startHitRaycastHit2D.transform.name;
+            var colliderGameObjectName = Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask)
+                .transform.name;
+
+
+            var transformGameObjectNameSplit = transformGameObjectName.Split("("[0]);
+            var colliderGameObjectNameSplit = colliderGameObjectName.Split("("[0]);
+
+
+            var transformGameObjectNumber = Convert.ToInt32(transformGameObjectNameSplit[1]
+                .Substring(0, transformGameObjectNameSplit[1].Length - 1));
+            var colliderGameObjectNumber = Convert.ToInt32(colliderGameObjectNameSplit[1]
+                .Substring(0, colliderGameObjectNameSplit[1].Length - 1));
+
+            var finalNumberOfCollider = transformGameObjectNumber + colliderGameObjectNumber;
+
+            if (transformGameObjectNumber != 10 && colliderGameObjectNumber != 10 && finalNumberOfCollider <= 10)
             {
+                var finalNameOfCollider = $"Number({finalNumberOfCollider})";
+
+                //Debug.Log(finalNameOfCollider);
+
+
+                Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name =
+                    finalNameOfCollider;
+
                 while (elapsedTime < TimeToMove)
                 {
                     _startHitRaycastHit2D.transform.position = Vector2.Lerp(_oriPos, _tarPos, elapsedTime / TimeToMove);
@@ -136,45 +175,17 @@ public class TileFreeMovement : MonoBehaviour
                 }
 
                 _startHitRaycastHit2D.transform.position = _tarPos;
+
                 _startHitRaycastHit2D.transform.gameObject.SetActive(false);
-
-                if (Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name ==
-                    "Number (1)")
-                {
-                   
-                    
-                    Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name =
-                        "Number (2)";
-                    Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.gameObject
-                        .GetComponent<SpriteRenderer>().sprite = sprites[0];
-                }
-                else if (Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name ==
-                         "Number (2)")
-                {
-                    Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name =
-                        "Number (4)";
-                    Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.gameObject
-                        .GetComponent<SpriteRenderer>().sprite = sprites[3];
-                }
-                else if (Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name ==
-                         "Number (4)")
-                {
-                    Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name =
-                        "Number (8)";
-                    Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.gameObject
-                        .GetComponent<SpriteRenderer>().sprite = sprites[4];
-                }
-                else if (Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name ==
-                         "Number (8)")
-                {
-                    Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name =
-                        "Number (16)";
-                    Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.gameObject
-                        .GetComponent<SpriteRenderer>().sprite = sprites[5];
-                }
+                Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.gameObject
+                    .GetComponent<SpriteRenderer>().sprite = sprites[finalNumberOfCollider];
+                _isMoving = false;
             }
-
-            _isMoving = false;
+            else
+            {
+                yield return null;
+                _isMoving = false;
+            }
         }
     }
 }
