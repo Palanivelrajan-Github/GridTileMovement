@@ -110,7 +110,10 @@ public class TileFreeMovement : MonoBehaviour
 
         if (!Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask))
         {
-            while (elapsedTime < TimeToMove)
+            yield return null;
+            _isMoving = false;
+            
+            /*while (elapsedTime < TimeToMove)
             {
                 _startHitRaycastHit2D.transform.position = Vector2.Lerp(_oriPos, _tarPos, elapsedTime / TimeToMove);
                 elapsedTime += Time.deltaTime;
@@ -118,7 +121,7 @@ public class TileFreeMovement : MonoBehaviour
             }
 
             _startHitRaycastHit2D.transform.position = _tarPos;
-            _isMoving = false;
+            _isMoving = false;*/
         }
         else
         {
@@ -138,10 +141,12 @@ public class TileFreeMovement : MonoBehaviour
                 if (Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name ==
                     "Number (1)")
                 {
+                   
+                    
                     Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name =
                         "Number (2)";
                     Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.gameObject
-                        .GetComponent<SpriteRenderer>().sprite = sprites[2];
+                        .GetComponent<SpriteRenderer>().sprite = sprites[0];
                 }
                 else if (Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name ==
                          "Number (2)")
