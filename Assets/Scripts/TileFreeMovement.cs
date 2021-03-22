@@ -1,12 +1,14 @@
 using System;
 using System.Collections;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
-[ExecuteInEditMode]
+//[ExecuteInEditMode]
 public class TileFreeMovement : MonoBehaviour
 {
-    private const float TimeToMove = 5.17f;
+    private const float TimeToMove = 0.17f;
     public Text text;
 
     public LayerMask borderLayerMask;
@@ -14,13 +16,31 @@ public class TileFreeMovement : MonoBehaviour
     public Sprite[] sprites;
 
     public Camera mainCamera;
+
+    public GameObject numberPrefab;
     private RaycastHit2D _endHitRaycastHit2D;
     private bool _isMoving;
+    private GameObject _numberGameObject;
     private Vector2 _oriPos, _tarPos;
+
+    private int _point;
+    private int _randomNumGenSeed;
     private RaycastHit2D _startHitRaycastHit2D;
 
     private Touch _touch;
     private Vector2 _touchStartPosition, _touchEndPosition;
+
+
+    private void Awake()
+    {
+        _randomNumGenSeed = 1;
+    }
+
+    private void Start()
+    {
+        if (InitialSystematicRandomizedNumber(_randomNumGenSeed)) Debug.Log("Random Num generated");
+    }
+
 
     private void Update()
     {
@@ -39,6 +59,7 @@ public class TileFreeMovement : MonoBehaviour
 
 #endif
 
+        text.text = $"Points: {_point}";
 
         if (Input.touchCount <= 0 || _isMoving) return;
         _touch = Input.GetTouch(0);
@@ -99,23 +120,115 @@ public class TileFreeMovement : MonoBehaviour
         }
     }
 
-
-    private void OnEnable()
+    private bool InitialSystematicRandomizedNumber(int seed)
     {
-        /*var str1 = "Number (011)";
-        var str2 = "Number (10)";
-        int final1;
+        Random.InitState(seed);
 
-        var Num1 = str1.Split("("[0]);
-        var Num2 = str2.Split("("[0]);
+        for (var i = 0; i < 6; i++)
+        for (var x = 0; x < 8; x++)
+        for (var y = 0; y < 10; y++)
+        {
+            var posX = Random.Range(-3, 5);
+            var posY = Random.Range(-5, 5);
+            var spriteArray = Random.Range(1, 10);
 
-        final1 = Convert.ToInt32(Num1[1].Substring(0, Num1[1].Length - 1)) +
-                 Convert.ToInt32(Num2[1].Substring(0, Num2[1].Length - 1));
-        // Debug.Log(final1);
 
-        Debug.Log($"Number ({final1})");*/
+            if (!Physics2D.OverlapBox(new Vector2(posX, posY), new Vector2(0.2f, 0.2f), borderLayerMask))
+            {
+                _numberGameObject = Instantiate(numberPrefab, new Vector2(posX, posY), quaternion.identity);
+                _numberGameObject.name = $"Number ({spriteArray})";
+                _numberGameObject.GetComponent<SpriteRenderer>().sprite = sprites[spriteArray];
+            }
+            else
+            {
+//                Debug.Log("Not placed: " + posX + " :" + posY + "   ");
+            }
+        }
+
+        return true;
     }
 
+    private bool NextSystematicRandomizedNumber(int seed)
+    {
+        Random.InitState(seed);
+
+        for (var i = 0; i < 6; i++)
+        for (var x = 0; x < 8; x++)
+        for (var y = 0; y < 10; y++)
+        {
+            var posX = Random.Range(-3, 5);
+            var posY = Random.Range(-5, 5);
+            var spriteArray = Random.Range(1, 10);
+
+
+            
+            if (!Physics2D.OverlapBox(new Vector2(posX, posY), new Vector2(0.2f, 0.2f), borderLayerMask))
+            {
+                Debug.Log(Physics2D.OverlapBox(new Vector2(posX, posY), new Vector2(0.2f, 0.2f), borderLayerMask).transform.name);
+                
+                Physics2D.OverlapBox(new Vector2(posX, posY), new Vector2(0.2f, 0.2f), borderLayerMask).transform.GetComponent<SpriteRenderer>().color =
+                    new Color(1.0f, 1.0f, 1.0f, 1.0f);
+                
+                _startHitRaycastHit2D.transform.GetComponent<BoxCollider2D>().enabled = true;
+
+                Physics2D.OverlapBox(new Vector2(posX, posY), new Vector2(0.2f, 0.2f), borderLayerMask).transform.name = $"Number ({spriteArray})";
+                
+                Physics2D.OverlapBox(new Vector2(posX, posY), new Vector2(0.2f, 0.2f), borderLayerMask).GetComponent<SpriteRenderer>().sprite = sprites[spriteArray];
+            }
+            else
+            {
+               
+            }
+        }
+
+        return true;
+    }
+
+
+    /*private void OnEnable()
+    {
+        Debug.Log("random number generation");
+
+
+        for (var x = 0; x < 10; x++)
+        for (var y = 0; y < 12; y++)
+        {
+            var posX = Random.Range(-4, 6);
+            var posY = Random.Range(-4, 5);
+            var spriteArray = Random.Range(1, 11);
+//
+
+            RaycastHit hit;
+            Ray ray = mainCamera.ScreenPointToRay(new Vector3(posX,posY));
+        
+            if (Physics.Raycast(ray, out hit)) {
+                Transform objectHit = hit.transform;
+            
+                // Do something with the object that was hit by the raycast.
+                Debug.Log("Not placed: " + posX + " :" + posY+"   "+objectHit.name);
+            }
+            else
+            {
+                _numberGameObject = Instantiate(numberPrefab, new Vector2(posX, posY), quaternion.identity);
+                _numberGameObject.name = $"Number ({spriteArray})";
+                _numberGameObject.GetComponent<SpriteRenderer>().sprite = sprites[spriteArray];
+                
+            }
+            
+//
+            /*if (Physics2D.Raycast(mainCamera.ScreenToWorldPoint(new Vector3(posX, posY,0.0f)), Vector2.zero).collider ==
+                null)
+            {
+                _numberGameObject = Instantiate(numberPrefab, new Vector2(posX, posY), quaternion.identity);
+                _numberGameObject.name = $"Number ({spriteArray})";
+                _numberGameObject.GetComponent<SpriteRenderer>().sprite = sprites[spriteArray];
+            }
+            else
+            {
+                Debug.Log("Not placed: " + posX + " :" + posY);
+            }#1#
+        }
+    }*/
 
     private IEnumerator MoveTile(Vector2 direction)
     {
@@ -141,45 +254,77 @@ public class TileFreeMovement : MonoBehaviour
         }
         else
         {
-            var transformGameObjectName = _startHitRaycastHit2D.transform.name;
             var colliderGameObjectName = Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask)
                 .transform.name;
 
+//            Debug.Log(colliderGameObjectName);
 
-            var transformGameObjectNameSplit = transformGameObjectName.Split("("[0]);
-            var colliderGameObjectNameSplit = colliderGameObjectName.Split("("[0]);
-
-
-            var transformGameObjectNumber = Convert.ToInt32(transformGameObjectNameSplit[1]
-                .Substring(0, transformGameObjectNameSplit[1].Length - 1));
-            var colliderGameObjectNumber = Convert.ToInt32(colliderGameObjectNameSplit[1]
-                .Substring(0, colliderGameObjectNameSplit[1].Length - 1));
-
-            var finalNumberOfCollider = transformGameObjectNumber + colliderGameObjectNumber;
-
-            if (transformGameObjectNumber != 10 && colliderGameObjectNumber != 10 && finalNumberOfCollider <= 10)
+            if (colliderGameObjectName != "TilemapBorder")
             {
-                var finalNameOfCollider = $"Number({finalNumberOfCollider})";
+                var transformGameObjectName = _startHitRaycastHit2D.transform.name;
 
-                //Debug.Log(finalNameOfCollider);
+                var transformGameObjectNameSplit = transformGameObjectName.Split("("[0]);
+                var colliderGameObjectNameSplit = colliderGameObjectName.Split("("[0]);
 
 
-                Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name =
-                    finalNameOfCollider;
+                var transformGameObjectNumber = Convert.ToInt32(transformGameObjectNameSplit[1]
+                    .Substring(0, transformGameObjectNameSplit[1].Length - 1));
 
-                while (elapsedTime < TimeToMove)
+                var colliderGameObjectNumber = Convert.ToInt32(colliderGameObjectNameSplit[1]
+                    .Substring(0, colliderGameObjectNameSplit[1].Length - 1));
+
+
+//                Debug.Log(transformGameObjectNumber + " " + colliderGameObjectNumber);
+
+                var finalNumberOfCollider = transformGameObjectNumber + colliderGameObjectNumber;
+
+                if (transformGameObjectNumber != 10 && colliderGameObjectNumber != 10 && finalNumberOfCollider <= 10)
                 {
-                    _startHitRaycastHit2D.transform.position = Vector2.Lerp(_oriPos, _tarPos, elapsedTime / TimeToMove);
-                    elapsedTime += Time.deltaTime;
-                    yield return null;
+                    var finalNameOfCollider = $"Number({finalNumberOfCollider})";
+
+
+                    Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.name =
+                        finalNameOfCollider;
+
+                    while (elapsedTime < TimeToMove)
+                    {
+                        _startHitRaycastHit2D.transform.position =
+                            Vector2.Lerp(_oriPos, _tarPos, elapsedTime / TimeToMove);
+                        elapsedTime += Time.deltaTime;
+                        yield return null;
+                    }
+
+                    _startHitRaycastHit2D.transform.position = _tarPos;
+
+                    
+                     //old // _startHitRaycastHit2D.transform.gameObject.SetActive(false);
+                    
+                    //new
+
+                    _startHitRaycastHit2D.transform.GetComponent<BoxCollider2D>().enabled = false;
+                    _startHitRaycastHit2D.transform.GetComponent<SpriteRenderer>().color =
+                        new Color(1.0f, 1.0f, 1.0f, 0.0f);
+                     
+                    //new
+                    
+                    Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.gameObject
+                        .GetComponent<SpriteRenderer>().sprite = sprites[finalNumberOfCollider];
+                    _startHitRaycastHit2D.transform.position = _oriPos;
+                    
+                    
+                    _isMoving = false;
+
+                    if (finalNumberOfCollider == 10)
+                    {
+                        _point++;
+                        if (NextSystematicRandomizedNumber(_point)) Debug.Log("RandomNext");
+                    }
                 }
-
-                _startHitRaycastHit2D.transform.position = _tarPos;
-
-                _startHitRaycastHit2D.transform.gameObject.SetActive(false);
-                Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.gameObject
-                    .GetComponent<SpriteRenderer>().sprite = sprites[finalNumberOfCollider];
-                _isMoving = false;
+                else
+                {
+                    yield return null;
+                    _isMoving = false;
+                }
             }
             else
             {
