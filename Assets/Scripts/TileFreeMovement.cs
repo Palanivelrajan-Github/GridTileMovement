@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,18 +19,23 @@ public class TileFreeMovement : MonoBehaviour
     public Camera mainCamera;
 
     public GameObject numberPrefab;
+
+    private readonly Queue<IEnumerator> _coroutineQueue = new Queue<IEnumerator>();
     private RaycastHit2D _endHitRaycastHit2D;
     private bool _isMoving;
+    private int _listTarget10Collider2D = -1;
     private GameObject _numberGameObject;
     private Vector2 _oriPos, _tarPos;
 
     private int _point;
     private int _randomNumGenSeed;
+
+    private IEnumerator _runningCoroutine;
     private RaycastHit2D _startHitRaycastHit2D;
+    private readonly List<Collider2D> _target10 = new List<Collider2D>();
 
     private Touch _touch;
     private Vector2 _touchStartPosition, _touchEndPosition;
-
 
     private void Awake()
     {
@@ -38,7 +44,7 @@ public class TileFreeMovement : MonoBehaviour
 
     private void Start()
     {
-        if (InitialSystematicRandomizedNumber(_randomNumGenSeed)) Debug.Log("Random Num generated");
+        if (SystematicRandomizedNumber(_randomNumGenSeed)) Debug.Log("Random Num generated");
     }
 
 
@@ -56,6 +62,7 @@ public class TileFreeMovement : MonoBehaviour
             if (_startHitRaycastHit2D.collider != null && _startHitRaycastHit2D.collider.CompareTag("Number"))
                 StartCoroutine(MoveTile(Vector2.left));
         }
+
 
 #endif
 
@@ -120,7 +127,7 @@ public class TileFreeMovement : MonoBehaviour
         }
     }
 
-    private bool InitialSystematicRandomizedNumber(int seed)
+    private bool SystematicRandomizedNumber(int seed)
     {
         Random.InitState(seed);
 
@@ -138,46 +145,6 @@ public class TileFreeMovement : MonoBehaviour
                 _numberGameObject = Instantiate(numberPrefab, new Vector2(posX, posY), quaternion.identity);
                 _numberGameObject.name = $"Number ({spriteArray})";
                 _numberGameObject.GetComponent<SpriteRenderer>().sprite = sprites[spriteArray];
-            }
-            else
-            {
-//                Debug.Log("Not placed: " + posX + " :" + posY + "   ");
-            }
-        }
-
-        return true;
-    }
-
-    private bool NextSystematicRandomizedNumber(int seed)
-    {
-        Random.InitState(seed);
-
-        for (var i = 0; i < 6; i++)
-        for (var x = 0; x < 8; x++)
-        for (var y = 0; y < 10; y++)
-        {
-            var posX = Random.Range(-3, 5);
-            var posY = Random.Range(-5, 5);
-            var spriteArray = Random.Range(1, 10);
-
-
-            
-            if (!Physics2D.OverlapBox(new Vector2(posX, posY), new Vector2(0.2f, 0.2f), borderLayerMask))
-            {
-                Debug.Log(Physics2D.OverlapBox(new Vector2(posX, posY), new Vector2(0.2f, 0.2f), borderLayerMask).transform.name);
-                
-                Physics2D.OverlapBox(new Vector2(posX, posY), new Vector2(0.2f, 0.2f), borderLayerMask).transform.GetComponent<SpriteRenderer>().color =
-                    new Color(1.0f, 1.0f, 1.0f, 1.0f);
-                
-                _startHitRaycastHit2D.transform.GetComponent<BoxCollider2D>().enabled = true;
-
-                Physics2D.OverlapBox(new Vector2(posX, posY), new Vector2(0.2f, 0.2f), borderLayerMask).transform.name = $"Number ({spriteArray})";
-                
-                Physics2D.OverlapBox(new Vector2(posX, posY), new Vector2(0.2f, 0.2f), borderLayerMask).GetComponent<SpriteRenderer>().sprite = sprites[spriteArray];
-            }
-            else
-            {
-               
             }
         }
 
@@ -229,6 +196,31 @@ public class TileFreeMovement : MonoBehaviour
             }#1#
         }
     }*/
+
+
+    private IEnumerator DisappearTarget10()
+    {
+        _runningCoroutine = null;
+
+        if (_coroutineQueue.Count > 0)
+        {
+            _runningCoroutine = _coroutineQueue.Dequeue();
+            StartCoroutine(_runningCoroutine);
+        }
+
+        yield return new WaitForSeconds(1.0f);
+        _listTarget10Collider2D++;
+
+        var spriteArray = Random.Range(1, 3);
+        _target10[_listTarget10Collider2D].transform.name = $"Number ({spriteArray})";
+        _target10[_listTarget10Collider2D].transform.gameObject
+            .GetComponent<SpriteRenderer>().sprite = sprites[spriteArray];
+
+
+        _point++;
+
+       // use time for random next if (SystematicRandomizedNumber(_point)) Debug.Log("RandomNext");
+    }
 
     private IEnumerator MoveTile(Vector2 direction)
     {
@@ -296,29 +288,35 @@ public class TileFreeMovement : MonoBehaviour
 
                     _startHitRaycastHit2D.transform.position = _tarPos;
 
-                    
-                     //old // _startHitRaycastHit2D.transform.gameObject.SetActive(false);
-                    
-                    //new
+
+                    //old    _startHitRaycastHit2D.transform.gameObject.SetActive(false);
+                    //new 22.03
 
                     _startHitRaycastHit2D.transform.GetComponent<BoxCollider2D>().enabled = false;
-                    _startHitRaycastHit2D.transform.GetComponent<SpriteRenderer>().color =
-                        new Color(1.0f, 1.0f, 1.0f, 0.0f);
-                     
-                    //new
-                    
+                    DestroyImmediate(_startHitRaycastHit2D.transform.gameObject);
+
+                    //new 22.03
                     Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.gameObject
                         .GetComponent<SpriteRenderer>().sprite = sprites[finalNumberOfCollider];
-                    _startHitRaycastHit2D.transform.position = _oriPos;
-                    
-                    
-                    _isMoving = false;
 
                     if (finalNumberOfCollider == 10)
                     {
-                        _point++;
-                        if (NextSystematicRandomizedNumber(_point)) Debug.Log("RandomNext");
+                        _target10.Add(Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask));
+
+                        // make some animation here... 
+                        if (_runningCoroutine == null)
+                        {
+                            _runningCoroutine = DisappearTarget10();
+                            StartCoroutine(_runningCoroutine);
+                        }
+                        else
+                        {
+                            _coroutineQueue.Enqueue(DisappearTarget10());
+                        }
                     }
+
+
+                    _isMoving = false;
                 }
                 else
                 {
