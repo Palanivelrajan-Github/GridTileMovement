@@ -9,7 +9,9 @@
         <e p="Scripts" t="Include">
           <e p="DragTestOn3DGameObject.cs" t="Include" />
           <e p="DragTestOnUIButton.cs" t="Include" />
+          <e p="Target10Click.cs" t="Include" />
           <e p="TileFreeMovement.cs" t="Include" />
+          <e p="TimeCountDownTest.cs" t="Include" />
         </e>
       </e>
       <e p="GridTileMovement.sln" t="IncludeFlat" />

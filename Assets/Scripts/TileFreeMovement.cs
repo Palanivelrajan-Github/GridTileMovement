@@ -10,8 +10,9 @@ using Random = UnityEngine.Random;
 public class TileFreeMovement : MonoBehaviour
 {
     private const float TimeToMove = 0.17f;
-    public Text text;
-
+    private const int TimeLeftForTake10 = 31;
+    public Text pointText;
+    public Text timerText;
     public LayerMask borderLayerMask;
 
     public Sprite[] sprites;
@@ -19,8 +20,10 @@ public class TileFreeMovement : MonoBehaviour
     public Camera mainCamera;
 
     public GameObject numberPrefab;
+    public float currentTime;
 
     private readonly Queue<IEnumerator> _coroutineQueue = new Queue<IEnumerator>();
+    private readonly List<Collider2D> _target10 = new List<Collider2D>();
     private RaycastHit2D _endHitRaycastHit2D;
     private bool _isMoving;
     private int _listTarget10Collider2D = -1;
@@ -32,7 +35,6 @@ public class TileFreeMovement : MonoBehaviour
 
     private IEnumerator _runningCoroutine;
     private RaycastHit2D _startHitRaycastHit2D;
-    private readonly List<Collider2D> _target10 = new List<Collider2D>();
 
     private Touch _touch;
     private Vector2 _touchStartPosition, _touchEndPosition;
@@ -44,7 +46,8 @@ public class TileFreeMovement : MonoBehaviour
 
     private void Start()
     {
-        if (SystematicRandomizedNumber(_randomNumGenSeed)) Debug.Log("Random Num generated");
+        SystematicRandomizedNumber(_randomNumGenSeed);
+        StartCoroutine(Timer()); // timer should be placed after the SystematicRandomizedNumber only inside
     }
 
 
@@ -66,7 +69,7 @@ public class TileFreeMovement : MonoBehaviour
 
 #endif
 
-        text.text = $"Points: {_point}";
+        pointText.text = $"{_point}";
 
         if (Input.touchCount <= 0 || _isMoving) return;
         _touch = Input.GetTouch(0);
@@ -127,28 +130,29 @@ public class TileFreeMovement : MonoBehaviour
         }
     }
 
-    private bool SystematicRandomizedNumber(int seed)
+    private void SystematicRandomizedNumber(int seed)
     {
-        Random.InitState(seed);
-
-        for (var i = 0; i < 6; i++)
-        for (var x = 0; x < 8; x++)
-        for (var y = 0; y < 10; y++)
+        if (!_isMoving)
         {
-            var posX = Random.Range(-3, 5);
-            var posY = Random.Range(-5, 5);
-            var spriteArray = Random.Range(1, 10);
+            Random.InitState(seed);
 
-
-            if (!Physics2D.OverlapBox(new Vector2(posX, posY), new Vector2(0.2f, 0.2f), borderLayerMask))
+            for (var i = 0; i < 6; i++)
+            for (var x = 0; x < 8; x++)
+            for (var y = 0; y < 10; y++)
             {
-                _numberGameObject = Instantiate(numberPrefab, new Vector2(posX, posY), quaternion.identity);
-                _numberGameObject.name = $"Number ({spriteArray})";
-                _numberGameObject.GetComponent<SpriteRenderer>().sprite = sprites[spriteArray];
+                var posX = Random.Range(-3, 5);
+                var posY = Random.Range(-5, 5);
+                var spriteArray = Random.Range(1, 10);
+
+
+                if (!Physics2D.OverlapBox(new Vector2(posX, posY), new Vector2(0.2f, 0.2f), borderLayerMask))
+                {
+                    _numberGameObject = Instantiate(numberPrefab, new Vector2(posX, posY), quaternion.identity);
+                    _numberGameObject.name = $"Number ({spriteArray})";
+                    _numberGameObject.GetComponent<SpriteRenderer>().sprite = sprites[spriteArray];
+                }
             }
         }
-
-        return true;
     }
 
 
@@ -211,15 +215,42 @@ public class TileFreeMovement : MonoBehaviour
         yield return new WaitForSeconds(1.0f);
         _listTarget10Collider2D++;
 
-        var spriteArray = Random.Range(1, 3);
+        var spriteArray = Random.Range(1, 10);
         _target10[_listTarget10Collider2D].transform.name = $"Number ({spriteArray})";
         _target10[_listTarget10Collider2D].transform.gameObject
             .GetComponent<SpriteRenderer>().sprite = sprites[spriteArray];
-
-
         _point++;
+    }
 
-       // use time for random next if (SystematicRandomizedNumber(_point)) Debug.Log("RandomNext");
+    private IEnumerator Timer()
+    {
+        currentTime = TimeLeftForTake10;
+
+        while (currentTime > 0)
+        {
+            currentTime -= Time.deltaTime;
+            TimerDisplay();
+            yield return null;
+        }
+    }
+
+    private void TimerDisplay()
+    {
+        var timeInMinutes = ((int) currentTime / 60 % 60).ToString("00");
+        var timeInSeconds = ((int) currentTime % 60).ToString("00");
+        timerText.text = $"{timeInMinutes}:{timeInSeconds}";
+
+        if (currentTime <= 0)
+        {
+            _isMoving = true;
+            timerText.text = "GAMEOVER";
+        }
+    }
+
+    public void GenerateNumbers()
+    {
+        //SystematicRandomizedNumber(_point);
+        SystematicRandomizedNumber(_randomNumGenSeed);
     }
 
     private IEnumerator MoveTile(Vector2 direction)
@@ -288,19 +319,15 @@ public class TileFreeMovement : MonoBehaviour
 
                     _startHitRaycastHit2D.transform.position = _tarPos;
 
-
-                    //old    _startHitRaycastHit2D.transform.gameObject.SetActive(false);
-                    //new 22.03
-
                     _startHitRaycastHit2D.transform.GetComponent<BoxCollider2D>().enabled = false;
                     DestroyImmediate(_startHitRaycastHit2D.transform.gameObject);
 
-                    //new 22.03
                     Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask).transform.gameObject
                         .GetComponent<SpriteRenderer>().sprite = sprites[finalNumberOfCollider];
 
                     if (finalNumberOfCollider == 10)
                     {
+                        currentTime += 10.0f; // bonus time given for take 10
                         _target10.Add(Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask));
 
                         // make some animation here... 
