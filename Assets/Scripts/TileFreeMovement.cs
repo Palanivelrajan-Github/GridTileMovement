@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -27,9 +28,13 @@ public class TileFreeMovement : MonoBehaviour
     public GameObject numberPrefab;
     public float currentTime;
 
-    private readonly Queue<IEnumerator> _coroutineQueue = new Queue<IEnumerator>();
+    private readonly Queue<IEnumerator> _coroutineQueueOfAppearRandomNumber = new Queue<IEnumerator>();
+
+    private readonly Queue<IEnumerator> _coroutineQueueOfTarget10 = new Queue<IEnumerator>();
+
     private readonly List<Collider2D> _target10 = new List<Collider2D>();
-    private readonly int[] SelectedRandomNumbers = {1, 2, 5};
+    private readonly int[] SelectedRandomNumbers = {1, 2, 3, 3, 2, 1};
+    private readonly int targetPoint = 20;
     private int _currentMoved;
     private RaycastHit2D _endHitRaycastHit2D;
     private bool _isMoving;
@@ -40,10 +45,10 @@ public class TileFreeMovement : MonoBehaviour
     private int _plusRandomNumbers;
 
     private int _point;
-    private int targetPoint=20;
     private int _randomNumGenSeed;
+    private IEnumerator _runningCoroutineOfAppearRandomNumber;
+    private IEnumerator _runningCoroutineOfTarget10;
 
-    private IEnumerator _runningCoroutine;
     private RaycastHit2D _startHitRaycastHit2D;
     private int _totalMoves = 50;
     private int _totalRandomNumberGenerated;
@@ -53,21 +58,31 @@ public class TileFreeMovement : MonoBehaviour
 
     private void Awake()
     {
-        
         _randomNumGenSeed = 1;
         _totalRandomNumberGenerated = 0;
-        moveText.text = $"<>:{(_totalMoves):00}";
+        moveText.text = $"<>:{_totalMoves:00}";
     }
 
     private void Start()
     {
         if (SystematicRandomizedNumber(_randomNumGenSeed) > 0)
-            StartCoroutine(Timer());
+        {
+           
+        }
+        StartCoroutine(Timer());
+            
     }
 
 
     private void Update()
     {
+
+        /*if (_coroutineQueueOfAppearRandomNumber.)
+        {
+            
+        }*/
+            
+            
 #if UNITY_EDITOR
 
 
@@ -157,25 +172,73 @@ public class TileFreeMovement : MonoBehaviour
         if (!_isMoving)
             //Random.InitState(seed);
 
-            for (var i = 0; i < 6; i++)
+            for (var i = 0; i < 6; i++) 
             for (var x = 0; x < 8; x++)
-            for (var y = 0; y < 10; y++)
+            for (var y = 0; y < 12; y++)
             {
+                //old
                 var posX = Random.Range(-3, 5);
-                var posY = Random.Range(-5, 5);
-                var spriteArray = SelectedRandomNumbers[Random.Range(0, SelectedRandomNumbers.Length)];
+                var posY = Random.Range(-5, 7);
 
-                if (!Physics2D.OverlapBox(new Vector2(posX, posY), new Vector2(0.2f, 0.2f), borderLayerMask))
+                //new
+                // var posX = Random.Range(-1, 3);
+                // var posY = Random.Range(-2, 2);
+
+
+                //new
+                // make some animation here... 
+                if (_runningCoroutineOfAppearRandomNumber == null)
                 {
-                    _numberGameObject = Instantiate(numberPrefab, new Vector2(posX, posY), quaternion.identity);
-                    _numberGameObject.name = $"Number ({spriteArray})";
-                    _numberGameObject.GetComponent<SpriteRenderer>().sprite = sprites[spriteArray];
-                    _totalRandomNumberGenerated++;
+                    _runningCoroutineOfAppearRandomNumber = AppearRandomNumbers(posX, posY);
+                    StartCoroutine(_runningCoroutineOfAppearRandomNumber);
                 }
+                else
+                {
+                    _coroutineQueueOfAppearRandomNumber.Enqueue(AppearRandomNumbers(posX, posY));
+                }
+
+
+                /* if (!Physics2D.OverlapBox(new Vector2(posX, posY), new Vector2(0.2f, 0.2f), borderLayerMask))
+                  {
+                      var spriteArray = SelectedRandomNumbers[Random.Range(0, SelectedRandomNumbers.Length)];
+                      _numberGameObject = Instantiate(numberPrefab, new Vector2(posX, posY), quaternion.identity);
+                      _numberGameObject.name = $"Number ({spriteArray})";
+                      _numberGameObject.GetComponent<SpriteRenderer>().sprite = sprites[spriteArray];
+                      _totalRandomNumberGenerated++;
+                }
+                */
             }
 
 
         return _totalRandomNumberGenerated;
+    }
+
+
+    private IEnumerator AppearRandomNumbers(int posX, int posY)
+    {
+        _runningCoroutineOfAppearRandomNumber = null;
+        
+        
+        
+        if (_coroutineQueueOfAppearRandomNumber.Count > 0)
+        {
+            _runningCoroutineOfAppearRandomNumber = _coroutineQueueOfAppearRandomNumber.Dequeue();
+            StartCoroutine(_runningCoroutineOfAppearRandomNumber);
+        }
+        
+        yield return new WaitForSeconds(Random.Range(1.0f, 5.0f));
+        
+        if (!Physics2D.OverlapBox(new Vector2(posX, posY), new Vector2(0.2f, 0.2f), borderLayerMask))
+        {
+            var spriteArray = SelectedRandomNumbers[Random.Range(0, SelectedRandomNumbers.Length)];
+            _numberGameObject = Instantiate(numberPrefab, new Vector2(posX, posY), quaternion.identity);
+            _numberGameObject.name = $"Number ({spriteArray})";
+            _numberGameObject.GetComponent<SpriteRenderer>().sprite = sprites[spriteArray];
+            _totalRandomNumberGenerated++;
+        }
+       
+
+        _totalRandomNumberGenerated++;
     }
 
 
@@ -227,12 +290,12 @@ public class TileFreeMovement : MonoBehaviour
 
     private IEnumerator DisappearTarget10()
     {
-        _runningCoroutine = null;
+        _runningCoroutineOfTarget10 = null;
 
-        if (_coroutineQueue.Count > 0)
+        if (_coroutineQueueOfTarget10.Count > 0)
         {
-            _runningCoroutine = _coroutineQueue.Dequeue();
-            StartCoroutine(_runningCoroutine);
+            _runningCoroutineOfTarget10 = _coroutineQueueOfTarget10.Dequeue();
+            StartCoroutine(_runningCoroutineOfTarget10);
         }
 
         yield return new WaitForSeconds(1.0f);
@@ -245,12 +308,12 @@ public class TileFreeMovement : MonoBehaviour
         _target10[_listTarget10Collider2D].transform.gameObject
             .GetComponent<SpriteRenderer>().sprite = sprites[spriteArray];
             */
-        
-        
+
+
         // Method2 Destroy the taken 10
         DestroyImmediate(_target10[_listTarget10Collider2D].transform.gameObject);
-        
-        
+
+
         _point++;
 
         if (_point % RatioOfPlusIncrease == 0)
@@ -277,7 +340,7 @@ public class TileFreeMovement : MonoBehaviour
     {
         var timeInMinutes = ((int) currentTime / 60 % 60).ToString("00");
         var timeInSeconds = ((int) currentTime % 60).ToString("00");
-        //timerText.text = $"{timeInMinutes}:{timeInSeconds}";
+        timerText.text = $"{timeInMinutes}:{timeInSeconds}";
 
         if (currentTime <= 0)
         {
@@ -379,14 +442,14 @@ public class TileFreeMovement : MonoBehaviour
                         _target10.Add(Physics2D.OverlapBox(_tarPos, new Vector2(0.2f, 0.2f), borderLayerMask));
 
                         // make some animation here... 
-                        if (_runningCoroutine == null)
+                        if (_runningCoroutineOfTarget10 == null)
                         {
-                            _runningCoroutine = DisappearTarget10();
-                            StartCoroutine(_runningCoroutine);
+                            _runningCoroutineOfTarget10 = DisappearTarget10();
+                            StartCoroutine(_runningCoroutineOfTarget10);
                         }
                         else
                         {
-                            _coroutineQueue.Enqueue(DisappearTarget10());
+                            _coroutineQueueOfTarget10.Enqueue(DisappearTarget10());
                         }
                     }
 
@@ -396,7 +459,7 @@ public class TileFreeMovement : MonoBehaviour
                     if (_totalMoves > 0)
                     {
                         _totalMoves--;
-                        moveText.text = $"<>:{(_totalMoves):00}";
+                        moveText.text = $"<>:{_totalMoves:00}";
                     }
                 }
                 else
