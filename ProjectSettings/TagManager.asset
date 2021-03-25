@@ -13,7 +13,7 @@ TagManager:
   - Water
   - UI
   - TilemapBorder
-  - 
+  - TileMapBackground
   - 
   - 
   - 
@@ -47,4 +47,7 @@ TagManager:
     locked: 0
   - name: Numbers
     uniqueID: 4200891519
+    locked: 0
+  - name: TileBorder
+    uniqueID: 1306049173
     locked: 0
