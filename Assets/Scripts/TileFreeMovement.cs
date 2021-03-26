@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -12,7 +11,7 @@ using Random = UnityEngine.Random;
 public class TileFreeMovement : MonoBehaviour
 {
     private const float TimeToMove = 0.17f;
-    private const int TimeLeftForTake10 = 3000; //old 31;
+    private const int TimeLeftForTake10 = 900; //old 31;
     private const int RatioOfPlusIncrease = 10;
     public Text pointText;
     public Text timerText;
@@ -35,11 +34,15 @@ public class TileFreeMovement : MonoBehaviour
     private readonly List<Collider2D> _target10 = new List<Collider2D>();
     private readonly int[] SelectedRandomNumbers = {1, 2, 3, 3, 2, 1};
     private readonly int targetPoint = 20;
+
+    private int _coroutineQueueOfAppearRandomNumberCount;
     private int _currentMoved;
     private RaycastHit2D _endHitRaycastHit2D;
     private bool _isMoving;
     private int _listTarget10Collider2D = -1;
     private GameObject _numberGameObject;
+
+    private bool _numberGenerating;
     private Vector2 _oriPos, _tarPos;
 
     private int _plusRandomNumbers;
@@ -50,6 +53,8 @@ public class TileFreeMovement : MonoBehaviour
     private IEnumerator _runningCoroutineOfTarget10;
 
     private RaycastHit2D _startHitRaycastHit2D;
+
+    private Coroutine _startTimerCoroutine;
     private int _totalMoves = 50;
     private int _totalRandomNumberGenerated;
 
@@ -58,105 +63,98 @@ public class TileFreeMovement : MonoBehaviour
 
     private void Awake()
     {
+        _startTimerCoroutine = null;
         _randomNumGenSeed = 1;
         _totalRandomNumberGenerated = 0;
-        moveText.text = $"<>:{_totalMoves:00}";
+        moveText.text = $"<{_totalMoves:00}>";
+        currentTime = TimeLeftForTake10;
     }
 
     private void Start()
     {
-        if (SystematicRandomizedNumber(_randomNumGenSeed) > 0)
-        {
-           
-        }
-        StartCoroutine(Timer());
-            
+        SystematicRandomizedNumber(_randomNumGenSeed);
     }
 
 
     private void Update()
     {
-
-        /*if (_coroutineQueueOfAppearRandomNumber.)
+        if (!_numberGenerating)
         {
-            
-        }*/
-            
-            
 #if UNITY_EDITOR
 
 
-        if (Input.GetMouseButtonDown(0) && !_isMoving)
-        {
-            _startHitRaycastHit2D =
-                Physics2D.Raycast(mainCamera.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
+            if (Input.GetMouseButtonDown(0) && !_isMoving)
+            {
+                _startHitRaycastHit2D =
+                    Physics2D.Raycast(mainCamera.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
 
 
-            if (_startHitRaycastHit2D.collider != null && _startHitRaycastHit2D.collider.CompareTag("Number"))
-                StartCoroutine(MoveTile(Vector2.left));
-        }
+                if (_startHitRaycastHit2D.collider != null && _startHitRaycastHit2D.collider.CompareTag("Number"))
+                    StartCoroutine(MoveTile(Vector2.left));
+            }
 
 
 #endif
 
-        pointText.text = $"{_point}/{targetPoint}";
+            pointText.text = $"{_point}/{targetPoint}";
 
-        if (Input.touchCount <= 0 || _isMoving) return;
-        _touch = Input.GetTouch(0);
+            if (Input.touchCount <= 0 || _isMoving) return;
+            _touch = Input.GetTouch(0);
 
-        switch (_touch.phase)
-        {
-            case TouchPhase.Began:
-                _touchStartPosition = _touch.position;
-                break;
+            switch (_touch.phase)
+            {
+                case TouchPhase.Began:
+                    _touchStartPosition = _touch.position;
+                    break;
 
-            case TouchPhase.Canceled:
-                break;
+                case TouchPhase.Canceled:
+                    break;
 
-            case TouchPhase.Ended:
+                case TouchPhase.Ended:
 
-                _touchEndPosition = _touch.position;
-                var x = _touchEndPosition.x - _touchStartPosition.x;
-                var y = _touchEndPosition.y - _touchStartPosition.y;
+                    _touchEndPosition = _touch.position;
+                    var x = _touchEndPosition.x - _touchStartPosition.x;
+                    var y = _touchEndPosition.y - _touchStartPosition.y;
 
-                _startHitRaycastHit2D =
-                    Physics2D.Raycast(mainCamera.ScreenToWorldPoint(_touchStartPosition), Vector2.zero);
+                    _startHitRaycastHit2D =
+                        Physics2D.Raycast(mainCamera.ScreenToWorldPoint(_touchStartPosition), Vector2.zero);
 
-                _endHitRaycastHit2D =
-                    Physics2D.Raycast(mainCamera.ScreenToWorldPoint(_touchEndPosition), Vector2.zero);
+                    _endHitRaycastHit2D =
+                        Physics2D.Raycast(mainCamera.ScreenToWorldPoint(_touchEndPosition), Vector2.zero);
 
-                if (_startHitRaycastHit2D.collider != null &&
-                    _startHitRaycastHit2D.collider != _endHitRaycastHit2D.collider)
-                    if (_startHitRaycastHit2D.collider.CompareTag("Number"))
-                    {
-                        if (Mathf.Abs(x) > Mathf.Abs(y))
+                    if (_startHitRaycastHit2D.collider != null &&
+                        _startHitRaycastHit2D.collider != _endHitRaycastHit2D.collider)
+                        if (_startHitRaycastHit2D.collider.CompareTag("Number"))
                         {
-                            if (x > 0.0f)
-                                StartCoroutine(MoveTile(Vector2.right));
-                            else if (x < 0.0f)
-                                StartCoroutine(MoveTile(Vector2.left));
+                            if (Mathf.Abs(x) > Mathf.Abs(y))
+                            {
+                                if (x > 0.0f)
+                                    StartCoroutine(MoveTile(Vector2.right));
+                                else if (x < 0.0f)
+                                    StartCoroutine(MoveTile(Vector2.left));
+                            }
+                            else if (Mathf.Abs(x) < Mathf.Abs(y))
+                            {
+                                if (y > 0.0f)
+                                    StartCoroutine(MoveTile(Vector2.up));
+                                else if (y < 0.0f)
+                                    StartCoroutine(MoveTile(Vector2.down));
+                            }
                         }
-                        else if (Mathf.Abs(x) < Mathf.Abs(y))
-                        {
-                            if (y > 0.0f)
-                                StartCoroutine(MoveTile(Vector2.up));
-                            else if (y < 0.0f)
-                                StartCoroutine(MoveTile(Vector2.down));
-                        }
-                    }
 
-                break;
+                    break;
 
 
-            case TouchPhase.Moved:
-                _touchEndPosition = _touch.position;
-                break;
+                case TouchPhase.Moved:
+                    _touchEndPosition = _touch.position;
+                    break;
 
-            case TouchPhase.Stationary:
-                break;
+                case TouchPhase.Stationary:
+                    break;
 
-            default:
-                throw new ArgumentOutOfRangeException();
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
     }
 
@@ -167,12 +165,14 @@ public class TileFreeMovement : MonoBehaviour
 
     private int SystematicRandomizedNumber(int seed)
     {
+        _numberGenerating = true;
         _totalRandomNumberGenerated = 0;
 
         if (!_isMoving)
+
             //Random.InitState(seed);
 
-            for (var i = 0; i < 6; i++) 
+            for (var i = 0; i < 6; i++)
             for (var x = 0; x < 8; x++)
             for (var y = 0; y < 12; y++)
             {
@@ -184,9 +184,6 @@ public class TileFreeMovement : MonoBehaviour
                 // var posX = Random.Range(-1, 3);
                 // var posY = Random.Range(-2, 2);
 
-
-                //new
-                // make some animation here... 
                 if (_runningCoroutineOfAppearRandomNumber == null)
                 {
                     _runningCoroutineOfAppearRandomNumber = AppearRandomNumbers(posX, posY);
@@ -196,17 +193,6 @@ public class TileFreeMovement : MonoBehaviour
                 {
                     _coroutineQueueOfAppearRandomNumber.Enqueue(AppearRandomNumbers(posX, posY));
                 }
-
-
-                /* if (!Physics2D.OverlapBox(new Vector2(posX, posY), new Vector2(0.2f, 0.2f), borderLayerMask))
-                  {
-                      var spriteArray = SelectedRandomNumbers[Random.Range(0, SelectedRandomNumbers.Length)];
-                      _numberGameObject = Instantiate(numberPrefab, new Vector2(posX, posY), quaternion.identity);
-                      _numberGameObject.name = $"Number ({spriteArray})";
-                      _numberGameObject.GetComponent<SpriteRenderer>().sprite = sprites[spriteArray];
-                      _totalRandomNumberGenerated++;
-                }
-                */
             }
 
 
@@ -217,17 +203,17 @@ public class TileFreeMovement : MonoBehaviour
     private IEnumerator AppearRandomNumbers(int posX, int posY)
     {
         _runningCoroutineOfAppearRandomNumber = null;
-        
-        
-        
+
+
         if (_coroutineQueueOfAppearRandomNumber.Count > 0)
         {
             _runningCoroutineOfAppearRandomNumber = _coroutineQueueOfAppearRandomNumber.Dequeue();
             StartCoroutine(_runningCoroutineOfAppearRandomNumber);
         }
-        
-        yield return new WaitForSeconds(Random.Range(1.0f, 5.0f));
-        
+
+        yield return new WaitForSeconds(Random.Range(1.0f, 2.0f));
+        _coroutineQueueOfAppearRandomNumberCount++;
+
         if (!Physics2D.OverlapBox(new Vector2(posX, posY), new Vector2(0.2f, 0.2f), borderLayerMask))
         {
             var spriteArray = SelectedRandomNumbers[Random.Range(0, SelectedRandomNumbers.Length)];
@@ -236,9 +222,38 @@ public class TileFreeMovement : MonoBehaviour
             _numberGameObject.GetComponent<SpriteRenderer>().sprite = sprites[spriteArray];
             _totalRandomNumberGenerated++;
         }
-       
 
-        _totalRandomNumberGenerated++;
+        if (_coroutineQueueOfAppearRandomNumberCount >= 576)
+        {
+            _coroutineQueueOfAppearRandomNumberCount = 0;
+
+            _startTimerCoroutine = StartCoroutine(TimerStart());
+
+            if (_plusRandomNumbers > 0 && _totalRandomNumberGenerated > 0)
+            {
+                _plusRandomNumbers--;
+                plusBtn.GetComponentInChildren<Text>().text = _plusRandomNumbers.ToString();
+
+                plusBtn.GetComponent<Button>().interactable = _plusRandomNumbers > 0;
+            }
+            else
+            {
+                plusBtn.GetComponent<Button>().interactable = _plusRandomNumbers > 0;
+            }
+
+            _numberGenerating = false;
+        }
+
+
+        //button
+
+        /*if (SystematicRandomizedNumber(_randomNumGenSeed) > 0)
+          {
+              _plusRandomNumbers--;
+           
+              plusBtn.GetComponentInChildren<Text>().text = _plusRandomNumbers.ToString();
+              if (_plusRandomNumbers == 0) plusBtn.GetComponent<Button>().interactable = false;
+          }*/
     }
 
 
@@ -313,8 +328,9 @@ public class TileFreeMovement : MonoBehaviour
         // Method2 Destroy the taken 10
         DestroyImmediate(_target10[_listTarget10Collider2D].transform.gameObject);
 
-
         _point++;
+        _totalMoves++;
+        moveText.text = $"<>:{_totalMoves:00}";
 
         if (_point % RatioOfPlusIncrease == 0)
         {
@@ -322,12 +338,20 @@ public class TileFreeMovement : MonoBehaviour
             plusBtn.GetComponentInChildren<Text>().text = _plusRandomNumbers.ToString();
             plusBtn.GetComponent<Button>().interactable = true;
         }
+
+        if (_point >= 20)
+        {
+            moveText.text = $"<You Win>";
+            _numberGenerating = true;
+            plusBtn.GetComponent<Button>().interactable = false;
+            exitBtn.GetComponent<Button>().interactable = true;
+            exitBtn.GetComponent<Image>().color = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+            exitBtn.GetComponentInChildren<Text>().color = new Color(0.0f, 0.0f, 0.0f, 1.0f);
+        }
     }
 
-    private IEnumerator Timer()
+    private IEnumerator TimerStart()
     {
-        currentTime = TimeLeftForTake10;
-
         while (currentTime > 0)
         {
             currentTime -= Time.deltaTime;
@@ -355,13 +379,11 @@ public class TileFreeMovement : MonoBehaviour
     public void GenerateNumbers()
     {
         if (_plusRandomNumbers > 0)
-            if (SystematicRandomizedNumber(_randomNumGenSeed) > 0)
-            {
-                _plusRandomNumbers--;
-
-                plusBtn.GetComponentInChildren<Text>().text = _plusRandomNumbers.ToString();
-                if (_plusRandomNumbers == 0) plusBtn.GetComponent<Button>().interactable = false;
-            }
+        {
+            StopCoroutine(_startTimerCoroutine);
+            plusBtn.GetComponent<Button>().interactable = false;
+            SystematicRandomizedNumber(_randomNumGenSeed);
+        }
     }
 
     private IEnumerator MoveTile(Vector2 direction)
